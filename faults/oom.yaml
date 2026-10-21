@@ -1,0 +1,9 @@
+command:
+  - python
+  - -c
+  - import time; x = b'x' * 314572800; time.sleep(300)
+resources:
+  requests:
+    memory: 32Mi
+  limits:
+    memory: 64Mi

@@ -1,0 +1,32 @@
+- id: crashloop
+  description: Container exits with an error right after start
+  root_cause_keywords: [crashloopbackoff, crash, exit]
+  expected_fix: Read the container logs, fix the startup error, redeploy
+- id: bad-image
+  description: Image name or tag cannot be pulled
+  root_cause_keywords: [image, pull]
+  expected_fix: Correct the image repository and tag
+- id: no-endpoints
+  description: Service selector matches no pods
+  root_cause_keywords: [endpoint, selector, label]
+  expected_fix: Make the Service selector match the pod labels
+- id: oom
+  description: Container is killed for exceeding its memory limit
+  root_cause_keywords: [oom, memory]
+  expected_fix: Raise the memory limit or fix the memory use
+- id: missing-configmap
+  description: Pod references a ConfigMap that does not exist
+  root_cause_keywords: [configmap, not found]
+  expected_fix: Create the ConfigMap or remove the reference
+- id: unschedulable
+  description: Pod requests more CPU than any node has
+  root_cause_keywords: [insufficient, cpu, schedul]
+  expected_fix: Lower the CPU request or add capacity
+- id: readiness-fail
+  description: Readiness probe path returns an error so the pod never becomes ready
+  root_cause_keywords: [readiness, probe, not ready]
+  expected_fix: Correct the probe path or port
+- id: bad-ingress
+  description: Ingress routes to a Service that does not exist
+  root_cause_keywords: [ingress, service, backend]
+  expected_fix: Point the Ingress at the real Service name
