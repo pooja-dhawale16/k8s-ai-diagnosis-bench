@@ -12,7 +12,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ .Values.ingress.serviceName | default (printf %s-svc .Release.Name) }}
+                name: {{ .Values.ingress.serviceName | default (printf "%s-svc" .Release.Name) }}
                 port:
                   number: 80
 {{- end }}
