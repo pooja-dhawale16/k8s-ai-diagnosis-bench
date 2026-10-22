@@ -1,0 +1,3 @@
+ingress:
+  enabled: true
+  serviceName: demo-service-typo

@@ -1,0 +1,18 @@
+image:
+  repository: demo-app
+  tag: ci
+  pullPolicy: IfNotPresent
+command: []
+readinessPath: /health
+serviceSelectorApp: ''
+envFromConfigMap: ''
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+ingress:
+  enabled: false
+  serviceName: ''

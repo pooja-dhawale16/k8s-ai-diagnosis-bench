@@ -1,0 +1,89 @@
+name: k8s-ai-diagnosis-bench
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: bench-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      K8SGPT_BACKEND: ${{ vars.LLM_BACKEND }}
+      LLM_MODEL: ${{ vars.LLM_MODEL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Lint Helm chart
+        run: helm lint chart/demo-app
+
+      - name: Build image
+        run: docker build -t demo-app:ci app/
+
+      - name: Trivy scan (fail on CRITICAL)
+        run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --exit-code 1 --severity CRITICAL --ignore-unfixed demo-app:ci
+
+      - name: Create Kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: bench
+
+      - name: Load image into Kind
+        run: kind load docker-image demo-app:ci --name bench
+
+      - name: Install K8sGPT
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download --repo k8sgpt-ai/k8sgpt --pattern k8sgpt_amd64.deb --dir /tmp
+          sudo dpkg -i /tmp/k8sgpt_amd64.deb
+          k8sgpt version
+
+      - name: Configure K8sGPT backend
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: k8sgpt auth add --backend $K8SGPT_BACKEND --model $LLM_MODEL --password $LLM_API_KEY
+
+      - name: Run benchmark
+        
+        run: python bench/run_bench.py
+
+      - name: Build report
+        run: |
+          pip install -r report_service/requirements.txt
+          uvicorn report_service.main:app --port 8080 &
+          sleep 5
+          curl -sf -X POST localhost:8080/report -H 'Content-Type: application/json' --data @results/raw_results.json -o results/report.json
+          curl -sf localhost:8080/report/markdown -o results/report.md
+          curl -sf localhost:8080/metrics -o results/metrics.txt
+
+      - name: Job summary
+        if: always()
+        run: test -f results/report.md && cat results/report.md >> $GITHUB_STEP_SUMMARY || true
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr comment ${{ github.event.pull_request.number }} --body-file results/report.md --edit-last --create-if-none
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results
+          path: results/

@@ -1,0 +1,3 @@
+image:
+  repository: registry.invalid/demo-app
+  tag: v9.9.9
