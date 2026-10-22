@@ -59,9 +59,7 @@ jobs:
         run: k8sgpt auth add --backend $K8SGPT_BACKEND --model $LLM_MODEL --password $LLM_API_KEY
 
       - name: Run benchmark
-        env:
-          
-          ONLY: crashloop,bad-image
+        
         run: python bench/run_bench.py
 
       - name: Build report
