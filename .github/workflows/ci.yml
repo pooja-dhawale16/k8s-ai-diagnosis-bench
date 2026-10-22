@@ -60,7 +60,7 @@ jobs:
 
       - name: Run benchmark
         env:
-          EXPLAIN: '0'
+          
           ONLY: crashloop,bad-image
         run: python bench/run_bench.py
 
