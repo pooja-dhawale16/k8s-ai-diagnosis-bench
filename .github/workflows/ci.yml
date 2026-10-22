@@ -17,7 +17,7 @@ concurrency:
 jobs:
   bench:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 75
     env:
       K8SGPT_BACKEND: ${{ vars.LLM_BACKEND }}
       LLM_MODEL: ${{ vars.LLM_MODEL }}

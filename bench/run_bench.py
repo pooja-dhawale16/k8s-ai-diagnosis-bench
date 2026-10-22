@@ -72,20 +72,7 @@ def run_case(case_id, values_file):
     }
 
 
-def main():
-    OUT.mkdir(exist_ok=True)
-    cases = [('baseline', None)]
-    for f in sorted(FAULTS.glob('*.yaml')):
-        if f.stem != 'ground_truth':
-            cases.append((f.stem, f))
-            only = os.getenv('ONLY')
-            if only:
-                cases = [c for c in cases if c[0] == 'baseline' or c[0] in only.split(',')]
-            results = []
-    for case_id, values in cases:
-        print('Running', case_id, flush=True)
-        results.append(run_case(case_id, values))
-        time.sleep(5)
+def save(results):
     payload = {
         'backend': BACKEND,
         'model': os.getenv('LLM_MODEL') or 'unknown',
@@ -93,6 +80,20 @@ def main():
         'cases': results,
     }
     (OUT / 'raw_results.json').write_text(json.dumps(payload, indent=2))
+
+
+def main():
+    OUT.mkdir(exist_ok=True)
+    cases = [('baseline', None)]
+    for f in sorted(FAULTS.glob('*.yaml')):
+        if f.stem != 'ground_truth':
+            cases.append((f.stem, f))
+    results = []
+    for case_id, values in cases:
+        print('Running', case_id, flush=True)
+        results.append(run_case(case_id, values))
+        save(results)
+        time.sleep(5)
 
 
 if __name__ == '__main__':
