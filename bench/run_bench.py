@@ -37,7 +37,7 @@ def analyze(namespace):
     data, err = None, ''
     for attempt in range(3):
         p = sh(cmd)
-        err = p.stderr[-500:]
+        err = 'STDOUT: ' + p.stdout[-700:] + ' STDERR: ' + p.stderr[-700:]
         data = parse_json(p.stdout)
         if data is not None:
             results = data.get('results') or []
@@ -78,7 +78,10 @@ def main():
     for f in sorted(FAULTS.glob('*.yaml')):
         if f.stem != 'ground_truth':
             cases.append((f.stem, f))
-    results = []
+            only = os.getenv('ONLY')
+            if only:
+                cases = [c for c in cases if c[0] == 'baseline' or c[0] in only.split(',')]
+            results = []
     for case_id, values in cases:
         print('Running', case_id, flush=True)
         results.append(run_case(case_id, values))
